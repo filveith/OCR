@@ -216,17 +216,13 @@ def zoning(ukwImg, grid_size = 4):
             height = stopY-startY
 
             newZone = [binImg[X][Y] for X in range(startX, stopX) for Y in range(startY, stopY)]
-
-            # print(startX, stopX, startY, stopY, "   ",  round(avgZone(newZone)),"%    img size : ", height, width)
-
-            createImgFromBin(newZone, 'zone'+str(nbImg)+'.png', height, width)
+            
+            # Divide the image in x parts
+            # createImgFromBin(newZone, 'zone'+str(nbImg)+'.png', height, width)
 
             nbImg = nbImg + 1
-
             zones += (round(avgZone(newZone)),)
 
-    # print(zones)
-    
     return zones
 
 def avgZone(zone):
