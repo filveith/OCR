@@ -301,7 +301,7 @@ def distanceEuclidienne(vecteur1, vecteur2):
 trainImages = getImages(TRAIN)
 trainLabels = getLabels(TRAIN)
 
-testImages = getImages(TEST)
-testLabels = getLabels(TEST)
+testImages = getImages(TRAIN)
+testLabels = getLabels(TRAIN)
 
 knn(trainImages, trainLabels, testImages, testLabels)
