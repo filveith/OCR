@@ -29,6 +29,7 @@ def standardize(img, name):
             newImage.append(0)       
 
     im2 = Image.new(img.mode, img.size)
+
     im2.putdata(newImage)
     im2.save(path)
     return im2
@@ -52,7 +53,6 @@ def getBinaryImg(img):
             nb = 0
             row = []
 
-    # print(binaryImage)
     return binaryImage
 
 def getImages(set):
@@ -86,7 +86,7 @@ def createImgFromBin(img_2d_list, filename, width = IMG_WIDTH, height = IMG_HEIG
     img.putdata(flat)
     img.save('./clean/'+filename)
 
-def getsubgrid(origin, size, grid):
+def getSubgrid(origin, size, grid):
     offset = floor(size/2)
     grid = np.array(grid)
     return grid[origin[0] - offset:origin[0] + offset+1,
@@ -108,28 +108,28 @@ def erosion(bin_img, eroder=[[1 for x in range(3)] for y in range(3)]):
     output=np.array([[0 for x in range(width)] for y in range(height)])
     for i in range(offset,height-offset):
         for j in range(offset, width-offset):
-            #Fix this getSubGrid(bin_img)
-            subarray = getsubgrid((i,j),eroder_size, bin_img)
+            subarray = getSubgrid((i,j),eroder_size, bin_img)
             output[i,j] = int(erosion_is_ok(eroder, subarray))
                   
-    createImgFromBin(output, "retest")
+    #createImgFromBin(output, "retest")
+    return output
 
 def dilatation(img, dilater_size=3):
-    imagePixels = getBinaryImg(img)
-    newImage = copy.deepcopy(imagePixels)
+    #imagePixels = getBinaryImg(img)
+    newImage = copy.deepcopy(img)
 
-    for row, val in enumerate(imagePixels):
-        for i, p in enumerate(imagePixels[row]):
+    for row, val in enumerate(img):
+        for i, p in enumerate(img[row]):
             if p == 0:
                 for x in range(-1,2,1):
                     for y in range(-1,2,1):
                         try:
-                            if imagePixels[row+x][i+y] == 1:
+                            if img[row+x][i+y] == 1:
                                 newImage[row+x][i+y] = 0
                         except:
                             pass
     
-    createImgFromBin(newImage, 'res_dilatation', img.size[0], img.size[1])
+    #createImgFromBin(newImage, 'res_dilatation', img.size[0], img.size[1])
     return newImage
 
 def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
@@ -142,32 +142,39 @@ def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
         counts = Counter(candidates)
         result_stats = ()
         for key in counts.keys():
-            result_stats += ((key, str((counts[key] / k) * 100) + "%"),)
+            result_stats += ((key, str(round((counts[key] / k) * 100, 2)) + "%"),)
+            
 
         result_stats = sorted(result_stats, key=lambda x:x[1], reverse=True)
         print(f"Le candidat {idx} était un {testing_labels[idx]} et on a trouvé {result_stats}")
             
 
 def getStatsOfImage(img):
+    """Récupère les informations (zoning, profils horizontal et vertical) d'une image qu'on utilisera pour la catégoriser
+
+    Args:
+        img (Image)
+
+    Returns:
+        tuple: Les informations de l'image
+    """
     stats = tuple()
-    #stats += (zoning(img),)
+    stats += (zoning(img),)
     stats += (getProfilOfImage("V", img),)
     stats += (getProfilOfImage("H", img),)
-    # ajouter autres stats
     
     return stats
 
-def isPrime(num):
-    if num > 1:
-        for i in range(2, num//2):
-            if (num % i) == 0:
-                return False
-            else:
-                return True
-    else:
-        return False
-
 def getProfilOfImage(direction, img):
+    """Détermine le profil de l'image
+
+    Args:
+        direction (str) : la direction du profil
+        img (Image)
+
+    Returns:
+        tuple: le profil
+    """
     resultat = ()
     imagePixels = np.array(list(img.getdata()))
     imagePixels = imagePixels.reshape(img.size[0], img.size[1])
@@ -250,7 +257,6 @@ def distanceEuclidienne(vecteur1, vecteur2):
     Returns:
         int: la distance
     """
-
     maxLen = max(len(vecteur1), len(vecteur2))
     
     dist = 0
