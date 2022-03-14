@@ -16,26 +16,48 @@ TRAIN = "train/"
 TEST = "test/"
 IMG_WIDTH = IMG_HEIGHT = 50
 
-def standardize(img, name):
+def standardize(image, name):
     path = './clean/'+name+''
-    img = img.resize((IMG_WIDTH, IMG_HEIGHT))
-    imagePixels = list(img.getdata())
+    image = image.resize((IMG_WIDTH, IMG_HEIGHT))
+    imagePixels = list(image.getdata())
     newImage = []
-    
+
+
     for p in imagePixels:
+    
         if p >= 255/2:
             newImage.append(255)
         else:
             newImage.append(0)       
 
-    im2 = Image.new(img.mode, img.size)
+    img = Image.new(image.mode, image.size)
+    img.putdata(newImage) #Unblurred verion of the image
 
-    im2.putdata(newImage)
-    im2.save(path)
-    return im2
+    erodedImg = erosion(img)
+    img = Image.new(erodedImg.mode, erodedImg.size) # Create a new image object because we save it in binary this time
+    img.putdata(list(erodedImg.getdata())) #Unblurred + eroded image
+
+    img.show()
+
+    dilatedImg = dilatation(img)
+    img.putdata(list(dilatedImg.getdata())) #Unblurred + eroded + dilated image
+
+    img.show()
+
+    img.save(path)
+    
+    return img
     
 
 def getBinaryImg(img):
+    """Return the binary version of an image (Only black and white pixels)
+
+    Args:
+        img (Image)
+
+    Returns:
+        array: The binary image as a nested array [[0,1,1,...][1,1,1,...]] 
+    """
     imagePixels = list(img.getdata())
     binaryImage = []
     width, height = img.size
@@ -59,12 +81,14 @@ def getImages(set):
     imagesNames = next(walk(set), (None, None, []))[2]
     results = []
 
-    for image in imagesNames:
-        if image != '.DS_Store':
-            with ImageOps.grayscale(Image.open(set+image)) as img:
-                img = standardize(img, image)
-                results.append((img, getStatsOfImage(img)))
-    return results
+    # for image in imagesNames:
+    #     if image != '.DS_Store':
+    # with ImageOps.grayscale(Image.open(set+image)) as img:
+    with ImageOps.grayscale(Image.open('projetOCR/chiffres/1_1.png')) as img:
+        # img = standardize(img, image)
+        img = standardize(img, '1_1.png')
+    #     results.append((img, getStatsOfImage(img)))
+    # return results
 
 def getLabels(set):
     imagesNames = next(walk(set), (None, None, []))[2]
@@ -86,53 +110,91 @@ def createImgFromBin(img_2d_list, filename, width = IMG_WIDTH, height = IMG_HEIG
     img.putdata(flat)
     img.save('./clean/'+filename)
 
-def getSubgrid(origin, size, grid):
-    offset = floor(size/2)
-    grid = np.array(grid)
-    return grid[origin[0] - offset:origin[0] + offset+1,
-                origin[1] - offset:origin[1] + offset+1]
+# def getSubgrid(origin, size, grid):
+#     offset = floor(size/2)
+#     grid = np.array(grid)
+#     return grid[origin[0] - offset:origin[0] + offset+1,
+#                 origin[1] - offset:origin[1] + offset+1]
 
-def erosion_is_ok(eroder, to_erode):
-    flat_eroder = list(chain.from_iterable(eroder))
-    flat_to_erode = list(chain.from_iterable(to_erode))
+# def erosion_is_ok(eroder, to_erode):
+#     flat_eroder = list(chain.from_iterable(eroder))
+#     flat_to_erode = list(chain.from_iterable(to_erode))
     
-    for i in range(0, len(flat_eroder)):
-        if flat_eroder[i] == 1 and flat_eroder[i] != flat_to_erode[i]:          
-            return False 
-    return True
+#     for i in range(0, len(flat_eroder)):
+#         if flat_eroder[i] == 1 and flat_eroder[i] != flat_to_erode[i]:          
+#             return False 
+#     return True
 
-def erosion(bin_img, eroder=[[1 for x in range(3)] for y in range(3)]):
-    height, width = len(bin_img), len(bin_img[0])
-    eroder_size = len(eroder)
-    offset = floor(eroder_size/2)
-    output=np.array([[0 for x in range(width)] for y in range(height)])
-    for i in range(offset,height-offset):
-        for j in range(offset, width-offset):
-            subarray = getSubgrid((i,j),eroder_size, bin_img)
-            output[i,j] = int(erosion_is_ok(eroder, subarray))
+# def erosion(bin_img, eroder=[[1 for x in range(3)] for y in range(3)]):
+#     height, width = len(bin_img), len(bin_img[0])
+#     eroder_size = len(eroder)
+#     offset = floor(eroder_size/2)
+#     output=np.array([[0 for x in range(width)] for y in range(height)])
+#     for i in range(offset,height-offset):
+#         for j in range(offset, width-offset):
+#             subarray = getSubgrid((i,j),eroder_size, bin_img)
+#             output[i,j] = int(erosion_is_ok(eroder, subarray))
                   
-    #createImgFromBin(output, "retest")
-    return output
+#     #createImgFromBin(output, "retest")
+#     return output
 
 def dilatation(img, dilater_size=3):
-    #imagePixels = getBinaryImg(img)
-    newImage = copy.deepcopy(img)
+    imagePixels = getBinaryImg(img)
+    newImage = copy.deepcopy(imagePixels)
 
-    for row, val in enumerate(img):
-        for i, p in enumerate(img[row]):
+    for row, val in enumerate(imagePixels):
+        for i, p in enumerate(imagePixels[row]):
             if p == 0:
                 for x in range(-1,2,1):
                     for y in range(-1,2,1):
                         try:
-                            if img[row+x][i+y] == 1:
+                            if imagePixels[row+x][i+y] == 1:
                                 newImage[row+x][i+y] = 0
                         except:
                             pass
     
-    #createImgFromBin(newImage, 'res_dilatation', img.size[0], img.size[1])
-    return newImage
+    dilatedImg = Image.new('1', img.size)
+    newImage_flat = [item for sublist in newImage for item in sublist]
+    dilatedImg.putdata(newImage_flat)
+    return dilatedImg
+
+
+
+def erosion(img, eroder_size=3):
+    """Erode an image
+
+    Args:
+        img (Image)
+        eroder_size (int, optional): The size of the eroder. Defaults to 3.
+
+    Returns:
+        Image: an eroded version of the given image
+    """
+    imagePixels = getBinaryImg(img)
+    newImage = copy.deepcopy(imagePixels)
+
+    # print(newImage)
+
+    for row, val in enumerate(imagePixels):
+        for i, p in enumerate(imagePixels[row]):
+            if p == 1:
+                for x in range(-1,2,1):
+                    for y in range(-1,2,1):
+                        try:
+                            if imagePixels[row+x][i+y] == 0:
+                                newImage[row+x][i+y] = 1
+                        except:
+                            pass
+    
+    erodedImg = Image.new('1', img.size)
+    newImage_flat = [item for sublist in newImage for item in sublist]
+    erodedImg.putdata(newImage_flat)
+    return erodedImg
+
 
 def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
+    positive = 0
+    negative = 0
     for idx, sample in enumerate(testing_set):
         distances = [distanceEuclidienne(sample[1], train_sample[1]) for train_sample in training_set]
 
@@ -142,11 +204,17 @@ def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
         counts = Counter(candidates)
         result_stats = ()
         for key in counts.keys():
-            result_stats += ((key, str(round((counts[key] / k) * 100, 2)) + "%"),)
-            
+            result_stats += ((key, str((counts[key] / k) * 100) + "%"),)
 
         result_stats = sorted(result_stats, key=lambda x:x[1], reverse=True)
         print(f"Le candidat {idx} était un {testing_labels[idx]} et on a trouvé {result_stats}")
+        if testing_labels[idx] == result_stats[0][0]:
+            positive += 1
+        else:
+            negative += 1
+
+    reussite = round((positive / (negative + positive)) * 100, 2)
+    print(f"Taux de réussite : {reussite}% avec {positive} positifs et {negative} négatifs")
             
 
 def getStatsOfImage(img):
@@ -226,14 +294,12 @@ def zoning(ukwImg, grid_size = 4):
 
             # print(startX, stopX, startY, stopY, "   ",  round(avgZone(newZone)),"%    img size : ", height, width)
 
-            createImgFromBin(newZone, 'zone'+str(nbImg)+'.png', height, width)
+            # createImgFromBin(newZone, 'zone'+str(nbImg)+'.png', height, width)
 
             nbImg = nbImg + 1
 
             zones += (round(avgZone(newZone)),)
 
-    # print(zones)
-    
     return zones
 
 def avgZone(zone):
@@ -274,12 +340,15 @@ def distanceEuclidienne(vecteur1, vecteur2):
             dist += (vecteur2[k] - vecteur1[k])**2
         
     return dist
-    
-trainImages = getImages(TRAIN)
-trainLabels = getLabels(TRAIN)
 
-testImages = getImages(TEST)
-testLabels = getLabels(TEST)
+  
+getImages('clean/1_1.png')
 
-knn(trainImages, trainLabels, testImages, testLabels)
+# trainImages = getImages(TRAIN)
+# trainLabels = getLabels(TRAIN)
+
+# testImages = getImages(TEST)
+# testLabels = getLabels(TEST)
+
+# knn(trainImages, trainLabels, testImages, testLabels)
 
