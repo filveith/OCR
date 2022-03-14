@@ -133,6 +133,8 @@ def dilatation(img, dilater_size=3):
     return newImage
 
 def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
+    positive = 0
+    negative = 0
     for idx, sample in enumerate(testing_set):
         distances = [distanceEuclidienne(sample[1], train_sample[1]) for train_sample in training_set]
 
@@ -146,26 +148,23 @@ def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
 
         result_stats = sorted(result_stats, key=lambda x:x[1], reverse=True)
         print(f"Le candidat {idx} était un {testing_labels[idx]} et on a trouvé {result_stats}")
+        if testing_labels[idx] == result_stats[0][0]:
+            positive += 1
+        else:
+            negative += 1
+
+    reussite = round((positive / (negative + positive)) * 100, 2)
+    print(f"Taux de réussite : {reussite}% avec {positive} positifs et {negative} négatifs")
             
 
 def getStatsOfImage(img):
     stats = tuple()
-    #stats += (zoning(img),)
+    stats += (zoning(img),)
     stats += (getProfilOfImage("V", img),)
     stats += (getProfilOfImage("H", img),)
     # ajouter autres stats
     
     return stats
-
-def isPrime(num):
-    if num > 1:
-        for i in range(2, num//2):
-            if (num % i) == 0:
-                return False
-            else:
-                return True
-    else:
-        return False
 
 def getProfilOfImage(direction, img):
     resultat = ()
