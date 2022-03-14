@@ -33,8 +33,10 @@ def standardize(image, name):
     img = Image.new(image.mode, image.size)
     img.putdata(newImage) #Unblurred verion of the image
 
+    img.show()
+
     erodedImg = erosion(img)
-    img = Image.new(erodedImg.mode, erodedImg.size) # Create a new image object because we save it in binary this time
+    img = Image.new('1', erodedImg.size) # Create a new image object because we save it in binary this time
     img.putdata(list(erodedImg.getdata())) #Unblurred + eroded image
 
     img.show()
@@ -65,7 +67,7 @@ def getBinaryImg(img):
     row = []
     for p in imagePixels:
         nb += 1
-        if p == 255:
+        if p == 255 or p == 1:
             row.append(1)
         else:
             row.append(0)   
@@ -84,7 +86,7 @@ def getImages(set):
     # for image in imagesNames:
     #     if image != '.DS_Store':
     # with ImageOps.grayscale(Image.open(set+image)) as img:
-    with ImageOps.grayscale(Image.open('projetOCR/chiffres/1_1.png')) as img:
+    with ImageOps.grayscale(Image.open('projetOCR/chiffres/-_4.png')) as img:
         # img = standardize(img, image)
         img = standardize(img, '1_1.png')
     #     results.append((img, getStatsOfImage(img)))
@@ -157,8 +159,6 @@ def dilatation(img, dilater_size=3):
     newImage_flat = [item for sublist in newImage for item in sublist]
     dilatedImg.putdata(newImage_flat)
     return dilatedImg
-
-
 
 def erosion(img, eroder_size=3):
     """Erode an image
