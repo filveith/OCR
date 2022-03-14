@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from itertools import chain
 from math import floor, sqrt
 import numpy as np
@@ -56,7 +57,7 @@ def getImages(set):
     for image in imagesNames:
         if image != '.DS_Store':
             with Image.open(set+image) as img:
-                results.append((img, getStatsOfImage(img)))
+                results.append((img, NULL)) # a remplacer par getStatsOfImage(img)
     return results
 
 def getLabels(set):
