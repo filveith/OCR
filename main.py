@@ -53,16 +53,9 @@ def erosion(bin_img, eroder=[[1 for x in range(3)] for y in range(3)]):
     for i in range(offset,height-offset):
         for j in range(offset, width-offset):
             subarray = getsubgrid((i,j),eroder_size,a)
-            print(i,j,erosion_is_ok(eroder, subarray))
-            if erosion_is_ok(eroder, subarray):
-                output[i,j] = 1
-            else:
-                output[i,j] = 0
-            
-            
-            
-            
-    createImgFromBin(output, "pitie")
+            output[i,j] = int(erosion_is_ok(eroder, subarray))
+
+    createImgFromBin(output, "retest")
 
 
 

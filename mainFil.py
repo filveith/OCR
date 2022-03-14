@@ -1,7 +1,10 @@
+from traceback import print_tb
 from PIL import Image, ImageOps
 from os import walk
 from itertools import chain
-
+from math import floor
+import numpy as np
+from re import A, sub
 
 def unBlur(img, name):
     path = './clean/'+name+''
@@ -18,6 +21,7 @@ def unBlur(img, name):
     im2 = Image.new(img.mode, img.size)
     im2.putdata(newImage)
     im2.save(path)
+    return im2
     
 def createImgFromBin(img_2d_list, filename, width=10, height=10):
     flat = list(img_2d_list)
@@ -29,7 +33,7 @@ def createImgFromBin(img_2d_list, filename, width=10, height=10):
 
     im2 = Image.new('1', (height, width))
     im2.putdata(flat)
-    im2.save('./out/'+filename+'.png')
+    im2.save('./clean/'+filename)
 
 def getBinaryImg(img):
     imagePixels = list(img.getdata())
@@ -38,6 +42,7 @@ def getBinaryImg(img):
     nb = 0
     row = []
     for p in imagePixels:
+        nb += 1
         if p == 255:
             row.append(1)
         else:
@@ -48,10 +53,14 @@ def getBinaryImg(img):
             nb = 0
             row = []
 
-    print(binaryImage)
+    # print(binaryImage)
     return binaryImage
 
-
+def zoning(img, nb_zones = 4):
+    refImg = './projetOCR/Reference/1.png'
+    ukwImg = './ProjetOCR/clean/1_1.png'
+    
+    return 0
 
 def dilatation(img, dilater_size=3):
     imagePixels = list(img.getdata())
@@ -77,10 +86,41 @@ def dilatation(img, dilater_size=3):
     createImgFromBin(newImage, 'res_dilatation', img.size[0], img.size[1])
     return newImage
 
+def getsubgrid(origin, size, grid):
+    offset = floor(size/2)
+    grid = np.array(grid)
+    return grid[origin[0] - offset:origin[0] + offset+1,
+                origin[1] - offset:origin[1] + offset+1]
+
+def erosion_is_ok(eroder, to_erode):
+    flat_eroder = list(chain.from_iterable(eroder))
+    flat_to_erode = list(chain.from_iterable(to_erode))
+    print(flat_eroder, flat_to_erode)
+    print()
+    for i in range(0, len(flat_eroder)):
+        if flat_eroder[i] == 1 and flat_eroder[i] != flat_to_erode[i]:          
+            return False 
+    return True
+        
+
+def erosion(bin_img, imageName, eroder=[[1 for x in range(3)] for y in range(3)]):
+    print(imageName, bin_img)
+    height, width = len(bin_img), len(bin_img[0])
+    print(width, height)
+    eroder_size = len(eroder)
+    offset = floor(eroder_size/2)
+    output=np.array([[0 for x in range(width)] for y in range(height)])
+    for i in range(offset,height-offset):
+        for j in range(offset, width-offset):
+            subarray = getsubgrid((i,j),eroder_size,a)
+            output[i,j] = int(erosion_is_ok(eroder, subarray))
+
+    createImgFromBin(output, imageName)
 
 
-with ImageOps.grayscale(Image.open("./out/dilatation.png")) as img:
-    dilatation(img) 
+# with ImageOps.grayscale(Image.open("./out/dilatation.png")) as img:
+#     dilatation(img) 
+
 
 
 a = [[0, 0, 0, 0, 0, 0, 0],
@@ -95,17 +135,23 @@ a = [[0, 0, 0, 0, 0, 0, 0],
 
 # createImgFromBin(a, 'dilatation')
 
-
-
-
-
 def getImages():
     return next(walk("./projetOCR/chiffres/"), (None, None, []))[2]
 
+def getCleanImages():
+    return next(walk("./clean/"), (None, None, []))[2]
 
 images = getImages()
 
-# for image in images:
-#     if image != '.DS_Store':
-#         with ImageOps.grayscale(Image.open("./projetOCR/chiffres/"+image)) as img:
-#             unBlur(img, image)
+for image in images:
+    if image != '.DS_Store':
+        with ImageOps.grayscale(Image.open("./projetOCR/chiffres/"+image)) as img:
+            unBlur(img, image)
+
+cleanImages = getCleanImages()
+
+for image in cleanImages:
+    if image != '.DS_Store':
+        with Image.open("./clean/"+image) as img:
+            binImg = getBinaryImg(img)
+            erosion(binImg, image)
