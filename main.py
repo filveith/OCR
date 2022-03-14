@@ -32,19 +32,22 @@ def standardize(image, name):
 
     img = Image.new(image.mode, image.size)
     img.putdata(newImage) #Unblurred verion of the image
-
-    img.show()
-
-    erodedImg = erosion(img)
-    img = Image.new('1', erodedImg.size) # Create a new image object because we save it in binary this time
-    img.putdata(list(erodedImg.getdata())) #Unblurred + eroded image
-
-    img.show()
+    
+    # img.show()
 
     dilatedImg = dilatation(img)
+    img = Image.new('1', dilatedImg.size) # Create a new image object because we save it in binary this time
+    
     img.putdata(list(dilatedImg.getdata())) #Unblurred + eroded + dilated image
 
-    img.show()
+    
+
+    # img.show()
+
+    erodedImg = erosion(img)
+    img.putdata(list(erodedImg.getdata())) #Unblurred + eroded image
+
+    # img.show()
 
     img.save(path)
     
@@ -83,14 +86,14 @@ def getImages(set):
     imagesNames = next(walk(set), (None, None, []))[2]
     results = []
 
-    # for image in imagesNames:
-    #     if image != '.DS_Store':
-    # with ImageOps.grayscale(Image.open(set+image)) as img:
-    with ImageOps.grayscale(Image.open('projetOCR/chiffres/-_4.png')) as img:
-        # img = standardize(img, image)
-        img = standardize(img, '1_1.png')
-    #     results.append((img, getStatsOfImage(img)))
-    # return results
+    for image in imagesNames:
+        if image != '.DS_Store':
+            with ImageOps.grayscale(Image.open(set+image)) as img:
+    # with ImageOps.grayscale(Image.open('projetOCR/chiffres/1_4.png')) as img:
+                img = standardize(img, image)
+        # img = standardize(img, '1_1.png')
+                results.append((img, getStatsOfImage(img)))
+    return results
 
 def getLabels(set):
     imagesNames = next(walk(set), (None, None, []))[2]
@@ -342,13 +345,13 @@ def distanceEuclidienne(vecteur1, vecteur2):
     return dist
 
   
-getImages('clean/1_1.png')
+# getImages('clean/1_1.png')
 
-# trainImages = getImages(TRAIN)
-# trainLabels = getLabels(TRAIN)
+trainImages = getImages(TRAIN)
+trainLabels = getLabels(TRAIN)
 
-# testImages = getImages(TEST)
-# testLabels = getLabels(TEST)
+testImages = getImages(TRAIN)
+testLabels = getLabels(TRAIN)
 
-# knn(trainImages, trainLabels, testImages, testLabels)
+knn(trainImages, trainLabels, testImages, testLabels)
 
