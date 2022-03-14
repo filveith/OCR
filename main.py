@@ -1,3 +1,4 @@
+from email.mime import image
 from itertools import chain
 from math import ceil, floor, sqrt
 from tokenize import String
@@ -8,6 +9,7 @@ from re import A
 import copy
 from PIL import Image, ImageOps
 from os import walk
+from collections import Counter
 
 ALL_CHIFFRES = "projetOCR/chiffres/"
 TRAIN = "train/"
@@ -60,7 +62,6 @@ def getImages(set):
     for image in imagesNames:
         if image != '.DS_Store':
             with ImageOps.grayscale(Image.open(set+image)) as img:
-                print(image)
                 img = standardize(img, image)
                 results.append((img, getStatsOfImage(img)))
     return results
@@ -131,15 +132,27 @@ def dilatation(img, dilater_size=3):
     createImgFromBin(newImage, 'res_dilatation', img.size[0], img.size[1])
     return newImage
 
-# def knn(training_set, training_labels, testing_set, k = 5):
-#     predictions = []
-#     for idx, sample in enumerate(testing_set):
-#         distances = 
+def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
+    for idx, sample in enumerate(testing_set):
+        distances = [distanceEuclidienne(sample[1], train_sample[1]) for train_sample in training_set]
+
+        sorted_distances = [pair[0] for pair in sorted(enumerate(distances), key=lambda x:x[1])]
+
+        candidates = [training_labels[idx] for idx in sorted_distances[:k]]
+        counts = Counter(candidates)
+        result_stats = ()
+        for key in counts.keys():
+            result_stats += ((key, str((counts[key] / k) * 100) + "%"),)
+
+        result_stats = sorted(result_stats, key=lambda x:x[1], reverse=True)
+        print(f"Le candidat {idx} était un {testing_labels[idx]} et on a trouvé {result_stats}")
             
 
 def getStatsOfImage(img):
-    stats = []
-    stats.append(zoning(img))
+    stats = tuple()
+    #stats += (zoning(img),)
+    stats += (getProfilOfImage("V", img),)
+    stats += (getProfilOfImage("H", img),)
     # ajouter autres stats
     
     return stats
@@ -154,7 +167,31 @@ def isPrime(num):
     else:
         return False
 
-def zoning(ukwImg, grid_size = 3):
+def getProfilOfImage(direction, img):
+    resultat = ()
+    imagePixels = np.array(list(img.getdata()))
+    imagePixels = imagePixels.reshape(img.size[0], img.size[1])
+
+    if direction == "H":
+        for row in imagePixels:
+            nbPerRow = 0
+            for pixel in row:
+                if pixel == 0:
+                    nbPerRow += 1
+            resultat += (nbPerRow,)
+    elif direction == "V":
+        for col in range(img.size[1]):
+            nbPerCol = 0
+            for line in range(img.size[0]):
+                if imagePixels[line][col] == 0:
+                    nbPerCol += 1
+            resultat += (nbPerCol,)
+    else:
+        return ()
+
+    return resultat
+
+def zoning(ukwImg, grid_size = 4):
     
     binImg = getBinaryImg(ukwImg)
     
@@ -213,6 +250,7 @@ def distanceEuclidienne(vecteur1, vecteur2):
     Returns:
         int: la distance
     """
+
     maxLen = max(len(vecteur1), len(vecteur2))
     
     dist = 0
@@ -224,27 +262,18 @@ def distanceEuclidienne(vecteur1, vecteur2):
         vecteur2 = vecteur2 + (0,)
     
     for k in range(maxLen):
-        dist += (vecteur2[k] - vecteur1[k])**2
+        if type(vecteur1[k]) == tuple and type(vecteur2[k]) == tuple:
+            dist += distanceEuclidienne(vecteur1[k], vecteur2[k])
+        else:
+            dist += (vecteur2[k] - vecteur1[k])**2
         
     return dist
     
+trainImages = getImages(TRAIN)
+trainLabels = getLabels(TRAIN)
 
-a = [[0, 0, 1, 1, 1, 0, 0],
-     [0, 0, 1, 1, 1, 0, 0],
-     [0, 1, 1, 1, 1, 1, 0],
-     [0, 1, 1, 1, 1, 1, 0],
-     [0, 1, 1, 1, 1, 1, 0],
-     [0, 1, 1, 1, 1, 1, 0],
-     [0, 0, 0, 0, 0, 0, 0]]
+testImages = getImages(TEST)
+testLabels = getLabels(TEST)
 
-test = [i for i in range(10) for j in range(2)]
+knn(trainImages, trainLabels, testImages, testLabels)
 
-# allImages = getImages(ALL_CHIFFRES)
-
-# trainImages = getImages(TRAIN)
-# trainLabels = getLabels(TRAIN)
-
-# testImages = getImages(TEST)
-# testLabels = getLabels(TEST)
-
-zoning(Image.open('clean/1_1.png'))
