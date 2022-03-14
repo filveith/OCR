@@ -5,6 +5,11 @@ from re import A
 from PIL import Image
 from os import walk
 
+ALL_CHIFFRES = "projetOCR/chiffres/"
+TRAIN = "train/"
+TEST = "test/"
+
+
 def avgEachPixel(img, name):
     path = './clean/'+name+''
     imagePixels = list(img.getdata())
@@ -20,8 +25,23 @@ def avgEachPixel(img, name):
     im2.putdata(newImage)
     im2.save(path)
     
-def getImages():
-    return next(walk("./projetOCR/chiffres/"), (None, None, []))[2]
+def getImages(set):
+    imagesNames = next(walk(set), (None, None, []))[2]
+    results = []
+
+    for image in imagesNames:
+        if image != '.DS_Store':
+            with Image.open(set+image) as img:
+                results.append((img, getStatsOfImage(img)))
+    return results
+
+def getLabels(set):
+    imagesNames = next(walk(set), (None, None, []))[2]
+    results = []
+    
+    for name in imagesNames:
+        results.append(name[0])
+    return results
 
 def createImgFromBin(img_2d_list, filename):
     flat = list(chain.from_iterable(img_2d_list))
@@ -56,19 +76,20 @@ def erosion(bin_img, eroder=[[1 for x in range(3)] for y in range(3)]):
                   
     createImgFromBin(output, "retest")
 
-def test():
-    chiffres = getImages()
-    lesnotres = next(walk("./clean/"), (None, None, []))[2]
-    for blabla in chiffres:
-        if blabla not in lesnotres:
-            chiffres.remove(blabla)
+
+# def knn(training_set, training_labels, testing_set, k = 5):
+#     predictions = []
+#     for idx, sample in enumerate(testing_set):
+#         distances = 
             
-    for i in range(len(chiffres)):
-        with Image.open("./projetOCR/chiffres/"+chiffres[i]) as currentChiffre, Image.open("./clean/"+lesnotres[i]) as currentNotre:
-            nbPixel = currentChiffre.size[0] * currentChiffre.size[1]
-            currentChiffrePixels = list(currentChiffre.getdata())
-            currentNotrePixels = list(currentNotre.getdata())
-            
+
+def getStatsOfImage(img):
+    stats = []
+    stats.append(zoning(img))
+    # ajouter autres stats
+    
+    return stats
+
 
 
 def distanceEuclidienne(vecteur1, vecteur2):
@@ -97,21 +118,20 @@ def distanceEuclidienne(vecteur1, vecteur2):
     return dist
     
 
-a = [[0, 0, 0, 0, 0, 0, 0],
-     [0, 1, 1, 1, 1, 1, 0],
+a = [[0, 0, 1, 1, 1, 0, 0],
+     [0, 0, 1, 1, 1, 0, 0],
      [0, 1, 1, 1, 1, 1, 0],
      [0, 1, 1, 1, 1, 1, 0],
      [0, 1, 1, 1, 1, 1, 0],
      [0, 1, 1, 1, 1, 1, 0],
      [0, 0, 0, 0, 0, 0, 0]]
 
-erosion(a)
+test = [i for i in range(10) for j in range(2)]
 
-distanceEuclidienne((3,3,3,3,3,3),(3,2,3))
+allImages = getImages(ALL_CHIFFRES)
 
-images = getImages()
+trainImages = getImages(TRAIN)
+trainLabels = getLabels(TRAIN)
 
-for image in images:
-    if image != '.DS_Store':
-        with Image.open("./projetOCR/chiffres/"+image) as img:
-            avgEachPixel(img, image)
+testImages = getImages(TEST)
+testLabels = getLabels(TEST)
