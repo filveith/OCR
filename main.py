@@ -2,7 +2,6 @@ from email.mime import image
 from itertools import chain
 from math import ceil, floor, sqrt
 from tokenize import String
-from tracemalloc import stop
 from turtle import width
 import numpy as np
 from re import A
@@ -22,7 +21,6 @@ def standardize(image, name):
     imagePixels = list(image.getdata())
     newImage = []
 
-
     for p in imagePixels:
     
         if p >= 255/2:
@@ -33,21 +31,12 @@ def standardize(image, name):
     img = Image.new(image.mode, image.size)
     img.putdata(newImage) #Unblurred verion of the image
     
-    # img.show()
-
     dilatedImg = dilatation(img)
-    img = Image.new('1', dilatedImg.size) # Create a new image object because we save it in binary this time
-    
-    img.putdata(list(dilatedImg.getdata())) #Unblurred + eroded + dilated image
-
-    
-
-    # img.show()
+    img = Image.new('1', dilatedImg.size) # Create a new image object because we save it in binary 
+    img.putdata(list(dilatedImg.getdata())) #Unblurred + dilated image
 
     erodedImg = erosion(img)
-    img.putdata(list(erodedImg.getdata())) #Unblurred + eroded image
-
-    # img.show()
+    img.putdata(list(erodedImg.getdata())) #Unblurred + dilated + eroded image
 
     img.save(path)
     
@@ -89,9 +78,7 @@ def getImages(set):
     for image in imagesNames:
         if image != '.DS_Store':
             with ImageOps.grayscale(Image.open(set+image)) as img:
-    # with ImageOps.grayscale(Image.open('projetOCR/chiffres/1_4.png')) as img:
                 img = standardize(img, image)
-        # img = standardize(img, '1_1.png')
                 results.append((img, getStatsOfImage(img)))
     return results
 
@@ -114,34 +101,6 @@ def createImgFromBin(img_2d_list, filename, width = IMG_WIDTH, height = IMG_HEIG
     img = Image.new('1', (width, height))
     img.putdata(flat)
     img.save('./clean/'+filename)
-
-# def getSubgrid(origin, size, grid):
-#     offset = floor(size/2)
-#     grid = np.array(grid)
-#     return grid[origin[0] - offset:origin[0] + offset+1,
-#                 origin[1] - offset:origin[1] + offset+1]
-
-# def erosion_is_ok(eroder, to_erode):
-#     flat_eroder = list(chain.from_iterable(eroder))
-#     flat_to_erode = list(chain.from_iterable(to_erode))
-    
-#     for i in range(0, len(flat_eroder)):
-#         if flat_eroder[i] == 1 and flat_eroder[i] != flat_to_erode[i]:          
-#             return False 
-#     return True
-
-# def erosion(bin_img, eroder=[[1 for x in range(3)] for y in range(3)]):
-#     height, width = len(bin_img), len(bin_img[0])
-#     eroder_size = len(eroder)
-#     offset = floor(eroder_size/2)
-#     output=np.array([[0 for x in range(width)] for y in range(height)])
-#     for i in range(offset,height-offset):
-#         for j in range(offset, width-offset):
-#             subarray = getSubgrid((i,j),eroder_size, bin_img)
-#             output[i,j] = int(erosion_is_ok(eroder, subarray))
-                  
-#     #createImgFromBin(output, "retest")
-#     return output
 
 def dilatation(img, dilater_size=3):
     imagePixels = getBinaryImg(img)
@@ -295,10 +254,6 @@ def zoning(ukwImg, grid_size = 4):
 
             newZone = [binImg[X][Y] for X in range(startX, stopX) for Y in range(startY, stopY)]
 
-            # print(startX, stopX, startY, stopY, "   ",  round(avgZone(newZone)),"%    img size : ", height, width)
-
-            # createImgFromBin(newZone, 'zone'+str(nbImg)+'.png', height, width)
-
             nbImg = nbImg + 1
 
             zones += (round(avgZone(newZone)),)
@@ -312,7 +267,6 @@ def avgZone(zone):
         sum += int(not bool(p))
 
     avg = sum / size * 100
-    # print(avg)
     
     return avg
 
@@ -344,14 +298,10 @@ def distanceEuclidienne(vecteur1, vecteur2):
         
     return dist
 
-  
-# getImages('clean/1_1.png')
-
 trainImages = getImages(TRAIN)
 trainLabels = getLabels(TRAIN)
 
-testImages = getImages(TRAIN)
-testLabels = getLabels(TRAIN)
+testImages = getImages(TEST)
+testLabels = getLabels(TEST)
 
 knn(trainImages, trainLabels, testImages, testLabels)
-
