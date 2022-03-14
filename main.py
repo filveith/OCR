@@ -1,12 +1,11 @@
 from itertools import chain
-from math import floor
+from math import floor, sqrt
 import numpy as np
-from re import A, sub
+from re import A
 from PIL import Image
 from os import walk
 
 def avgEachPixel(img, name):
-    # imgName = img.info["filename"]
     path = './clean/'+name+''
     imagePixels = list(img.getdata())
     newImage = []
@@ -53,18 +52,50 @@ def erosion(bin_img, eroder=[[1 for x in range(3)] for y in range(3)]):
     for i in range(offset,height-offset):
         for j in range(offset, width-offset):
             subarray = getsubgrid((i,j),eroder_size,a)
-            print(i,j,erosion_is_ok(eroder, subarray))
-            if erosion_is_ok(eroder, subarray):
-                output[i,j] = 1
-            else:
-                output[i,j] = 0
+            output[i,j] = int(erosion_is_ok(eroder, subarray))
+                  
+    createImgFromBin(output, "retest")
+
+def test():
+    chiffres = getImages()
+    lesnotres = next(walk("./clean/"), (None, None, []))[2]
+    for blabla in chiffres:
+        if blabla not in lesnotres:
+            chiffres.remove(blabla)
             
+    for i in range(len(chiffres)):
+        with Image.open("./projetOCR/chiffres/"+chiffres[i]) as currentChiffre, Image.open("./clean/"+lesnotres[i]) as currentNotre:
+            nbPixel = currentChiffre.size[0] * currentChiffre.size[1]
+            currentChiffrePixels = list(currentChiffre.getdata())
+            currentNotrePixels = list(currentNotre.getdata())
             
-            
-            
-    createImgFromBin(output, "pitie")
 
 
+def distanceEuclidienne(vecteur1, vecteur2):
+    """Calcule la distance euclidienne entre deux vecteurs
+
+    Args:
+        vecteur1 (tuple)
+        vecteur2 (tuple)
+
+    Returns:
+        int: la distance
+    """
+    maxLen = max(len(vecteur1), len(vecteur2))
+    
+    dist = 0
+    
+    for i in range(maxLen - len(vecteur1)):
+        vecteur1 = vecteur1 + (0,)
+        
+    for j in range(maxLen - len(vecteur2)):
+        vecteur2 = vecteur2 + (0,)
+    
+    for k in range(maxLen):
+        dist += (vecteur2[k] - vecteur1[k])**2
+        
+    return dist
+    
 
 a = [[0, 0, 0, 0, 0, 0, 0],
      [0, 1, 1, 1, 1, 1, 0],
@@ -74,7 +105,9 @@ a = [[0, 0, 0, 0, 0, 0, 0],
      [0, 1, 1, 1, 1, 1, 0],
      [0, 0, 0, 0, 0, 0, 0]]
 
-erosion(a, eroder=[[1 for x in range(5)] for y in range(5)])
+erosion(a)
+
+distanceEuclidienne((3,3,3,3,3,3),(3,2,3))
 
 images = getImages()
 
@@ -82,5 +115,3 @@ for image in images:
     if image != '.DS_Store':
         with Image.open("./projetOCR/chiffres/"+image) as img:
             avgEachPixel(img, image)
-
-
