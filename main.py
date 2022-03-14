@@ -265,11 +265,11 @@ def distanceEuclidienne(vecteur1, vecteur2):
         
     return dist
     
-trainImages = getImages(TRAIN)
-trainLabels = getLabels(TRAIN)
+trainImages = getImages(ALL_CHIFFRES)
+trainLabels = getLabels(ALL_CHIFFRES)
 
-testImages = getImages(TEST)
-testLabels = getLabels(TEST)
+testImages = getImages(ALL_CHIFFRES)
+testLabels = getLabels(ALL_CHIFFRES)
 
 knn(trainImages, trainLabels, testImages, testLabels)
 
