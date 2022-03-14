@@ -1,20 +1,22 @@
-from asyncio.windows_events import NULL
 from itertools import chain
-from math import floor, sqrt
+from math import ceil, floor, sqrt
+from tokenize import String
+from tracemalloc import stop
+from turtle import width
 import numpy as np
 from re import A
 import copy
-from PIL import Image
+from PIL import Image, ImageOps
 from os import walk
 
 ALL_CHIFFRES = "projetOCR/chiffres/"
 TRAIN = "train/"
 TEST = "test/"
-
+IMG_WIDTH = IMG_HEIGHT = 50
 
 def standardize(img, name):
     path = './clean/'+name+''
-    img = img.resize((50, 50))
+    img = img.resize((IMG_WIDTH, IMG_HEIGHT))
     imagePixels = list(img.getdata())
     newImage = []
     
@@ -57,8 +59,10 @@ def getImages(set):
 
     for image in imagesNames:
         if image != '.DS_Store':
-            with Image.open(set+image) as img:
-                results.append((img, NULL)) # a remplacer par getStatsOfImage(img)
+            with ImageOps.grayscale(Image.open(set+image)) as img:
+                print(image)
+                img = standardize(img, image)
+                results.append((img, getStatsOfImage(img)))
     return results
 
 def getLabels(set):
@@ -69,18 +73,17 @@ def getLabels(set):
         results.append(name[0])
     return results
 
-def createImgFromBin(img_2d_list, filename):
+def createImgFromBin(img_2d_list, filename, width = IMG_WIDTH, height = IMG_HEIGHT):
     flat = list(img_2d_list)
-    width, height = img_2d_list.size
     # Check if list is nested or not (if yes we flaten it)
     if any(isinstance(i, list) for i in img_2d_list): 
         flat = list(chain.from_iterable(img_2d_list))
         width = len(img_2d_list[0])
         height = len(img_2d_list)
 
-    im2 = Image.new('1', (height, width))
-    im2.putdata(flat)
-    im2.save('./clean/'+filename)
+    img = Image.new('1', (width, height))
+    img.putdata(flat)
+    img.save('./clean/'+filename)
 
 def getsubgrid(origin, size, grid):
     offset = floor(size/2)
@@ -141,23 +144,53 @@ def getStatsOfImage(img):
     
     return stats
 
-def zoning(ukwImg, nb_zones = 4):
+def isPrime(num):
+    if num > 1:
+        for i in range(2, num//2):
+            if (num % i) == 0:
+                return False
+            else:
+                return True
+    else:
+        return False
+
+def zoning(ukwImg, grid_size = 3):
     
     binImg = getBinaryImg(ukwImg)
     
-    # for i in range(nb_zones):
-        
-    zone1 = [binImg[x][y] for x in range(0,25) for y in range(0,25)]
-    zone2 = [binImg[y][x] for x in range(25,50) for y in range(0,25)]
-    zone3 = [binImg[y][x] for x in range(0,25) for y in range(25,50)]
-    zone4 = [binImg[y][x] for x in range(25,50) for y in range(25,50)]
+    zones = ()
 
-    avgZone(zone1)
-    avgZone(zone2)
-    avgZone(zone3)
-    avgZone(zone4)
+    newZone = []
+    nbImg = 1
 
-    return 0
+    for x in range(grid_size):
+        for y in range(grid_size):
+            
+            startX = x*ceil(IMG_WIDTH/grid_size)
+            stopX = ceil(IMG_WIDTH/grid_size) + startX
+
+            startY = y*ceil(IMG_WIDTH/grid_size)
+            stopY = ceil(IMG_WIDTH/grid_size) + startY
+
+            if stopX > IMG_WIDTH : stopX = IMG_WIDTH
+            if stopY > IMG_HEIGHT : stopY = IMG_HEIGHT
+
+            width = stopX-startX
+            height = stopY-startY
+
+            newZone = [binImg[X][Y] for X in range(startX, stopX) for Y in range(startY, stopY)]
+
+            # print(startX, stopX, startY, stopY, "   ",  round(avgZone(newZone)),"%    img size : ", height, width)
+
+            createImgFromBin(newZone, 'zone'+str(nbImg)+'.png', height, width)
+
+            nbImg = nbImg + 1
+
+            zones += (round(avgZone(newZone)),)
+
+    # print(zones)
+    
+    return zones
 
 def avgZone(zone):
     size = len(zone)
@@ -166,7 +199,7 @@ def avgZone(zone):
         sum += int(not bool(p))
 
     avg = sum / size * 100
-    print(avg)
+    # print(avg)
     
     return avg
 
@@ -206,10 +239,12 @@ a = [[0, 0, 1, 1, 1, 0, 0],
 
 test = [i for i in range(10) for j in range(2)]
 
-allImages = getImages(ALL_CHIFFRES)
+# allImages = getImages(ALL_CHIFFRES)
 
-trainImages = getImages(TRAIN)
-trainLabels = getLabels(TRAIN)
+# trainImages = getImages(TRAIN)
+# trainLabels = getLabels(TRAIN)
 
-testImages = getImages(TEST)
-testLabels = getLabels(TEST)
+# testImages = getImages(TEST)
+# testLabels = getLabels(TEST)
+
+zoning(Image.open('clean/1_1.png'))

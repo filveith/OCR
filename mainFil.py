@@ -7,22 +7,22 @@ from math import floor
 import numpy as np
 from re import A, sub
 
-# def unBlur(img, name):
-#     path = './clean/'+name+''
-#     img = img.resize((50, 50))
-#     imagePixels = list(img.getdata())
-#     newImage = []
+def unBlur(img, name):
+    path = './clean/'+name+''
+    img = img.resize((50, 50))
+    imagePixels = list(img.getdata())
+    newImage = []
     
-#     for p in imagePixels:
-#         if p >= 255/2:
-#             newImage.append(255)
-#         else:
-#             newImage.append(0)       
+    for p in imagePixels:
+        if p >= 255/2:
+            newImage.append(255)
+        else:
+            newImage.append(0)       
 
-#     im2 = Image.new(img.mode, img.size)
-#     im2.putdata(newImage)
-#     im2.save(path)
-#     return im2
+    im2 = Image.new(img.mode, img.size)
+    im2.putdata(newImage)
+    im2.save(path)
+    return im2
     
 # def createImgFromBin(img_2d_list, filename, width=10, height=10):
 #     flat = list(img_2d_list)
@@ -57,35 +57,35 @@ from re import A, sub
 #     # print(binaryImage)
 #     return binaryImage
 
-# def avgZone(zone):
-#     size = len(zone)
-#     sum = 0
-#     for p in zone:
-#         sum += int(not bool(p))
+def avgZone(zone):
+    size = len(zone)
+    sum = 0
+    for p in zone:
+        sum += int(not bool(p))
 
-#     avg = sum / size * 100
-#     print(avg)
+    avg = sum / size * 100
+    print(avg)
     
-#     return avg
+    return avg
 
 
-# def zoning(ukwImg, nb_zones = 4):
+def zoning(ukwImg, nb_zones = 4):
 
-#     binImg = getBinaryImg(ukwImg)
+    binImg = getBinaryImg(ukwImg)
     
-#     # for i in range(nb_zones):
+    # for i in range(nb_zones):
         
-#     zone1 = [binImg[x][y] for x in range(0,25) for y in range(0,25)]
-#     zone2 = [binImg[y][x] for x in range(25,50) for y in range(0,25)]
-#     zone3 = [binImg[y][x] for x in range(0,25) for y in range(25,50)]
-#     zone4 = [binImg[y][x] for x in range(25,50) for y in range(25,50)]
+    zone1 = [binImg[x][y] for x in range(0,25) for y in range(0,25)]
+    zone2 = [binImg[y][x] for x in range(25,50) for y in range(0,25)]
+    zone3 = [binImg[y][x] for x in range(0,25) for y in range(25,50)]
+    zone4 = [binImg[y][x] for x in range(25,50) for y in range(25,50)]
 
-#     avgZone(zone1)
-#     avgZone(zone2)
-#     avgZone(zone3)
-#     avgZone(zone4)
+    avgZone(zone1)
+    avgZone(zone2)
+    avgZone(zone3)
+    avgZone(zone4)
 
-#     return 0
+    return 0
 
 
 # def dilatation(img, dilater_size=3):
