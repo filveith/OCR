@@ -3,6 +3,7 @@ from itertools import chain
 from math import floor, sqrt
 import numpy as np
 from re import A
+import copy
 from PIL import Image
 from os import walk
 
@@ -110,26 +111,20 @@ def erosion(bin_img, eroder=[[1 for x in range(3)] for y in range(3)]):
     createImgFromBin(output, "retest")
 
 def dilatation(img, dilater_size=3):
-    imagePixels = list(img.getdata())
-    newImage = imagePixels
+    imagePixels = getBinaryImg(img)
+    newImage = copy.deepcopy(imagePixels)
 
-    width, height = img.size
-    print(imagePixels)
-
-    for i, p in enumerate(imagePixels):
-        print(p)
-        if p == 255:
-            for x in range(width*-1,width*2,width):
-                for y in range(dilater_size):
-                    try:
-                        print("x: ",x," y: ",y," i: ",i,"  co:",(i+x+y)," value: ",imagePixels[(i+x)+y])
-                        if imagePixels[(i+x)+y] == 0:
-                            print("255")
-                            newImage[(i+x)+y] = 255
-                    except:
-                        pass
-
-    print(newImage)
+    for row, val in enumerate(imagePixels):
+        for i, p in enumerate(imagePixels[row]):
+            if p == 0:
+                for x in range(-1,2,1):
+                    for y in range(-1,2,1):
+                        try:
+                            if imagePixels[row+x][i+y] == 1:
+                                newImage[row+x][i+y] = 0
+                        except:
+                            pass
+    
     createImgFromBin(newImage, 'res_dilatation', img.size[0], img.size[1])
     return newImage
 
