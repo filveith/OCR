@@ -3,6 +3,7 @@ from math import ceil
 from RFUtils import getBinaryImg
 
 IMG_WIDTH = IMG_HEIGHT = 50
+ZONING_GRID = 5
 
 def getProfilOfImage(direction, img):
     """Détermine le profil de l'image
@@ -38,8 +39,17 @@ def getProfilOfImage(direction, img):
 
     return resultat
 
-def zoning(ukwImg, grid_size = 4):
-    
+def zoning(ukwImg, grid_size = ZONING_GRID):
+    """Applys a zoning algorithms on the image
+
+    Args:
+        ukwImg (Image)
+        grid_size (int, optional): The grid size, nb zones = grid_size * grid_size. Defaults to ZONING_GRID.
+
+    Returns:
+        zones: a tuple of each zone value  
+    """
+
     binImg = getBinaryImg(ukwImg)
     
     zones = ()
@@ -68,6 +78,14 @@ def zoning(ukwImg, grid_size = 4):
     return zones
 
 def avgZone(zone):
+    """Get the average value of black pixels for a given zone
+
+    Args:
+        zone (array): the pixels of the zone
+
+    Returns:
+        int: the percanatge of black pixels in the zone 
+    """
     size = len(zone)
     sum = 0
     for p in zone:
