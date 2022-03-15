@@ -69,31 +69,8 @@ def distanceEuclidienne(vecteur1, vecteur2):
         
     return dist
 
-def showMatrix(results, search):
-    positive = 0
-    negative = 0
-    matrice_confusion = {}
-    if search == results:
-        positive += 1
-
-        try:
-            (matrice_confusion[search])[results] = (matrice_confusion[search])[results] + 1
-        except :
-            try:
-                matrice_confusion[str(search)][results] = 1
-            except:
-                matrice_confusion[str(search)] = {results:1}
-            
-    else:
-        negative += 1
-        try:
-            (matrice_confusion[search])[results] = (matrice_confusion[search])[results]+1
-        except :
-            try:
-                matrice_confusion[str(search)][results] = 1
-            except:
-                matrice_confusion[str(search)] = {results:1}
-                
+def showMatrix(matrice_confusion, positive, negative):
+    
     reussite = round((positive / (negative + positive)) * 100, 2)
     print(f"\nTaux de réussite : {reussite}% avec {positive} positifs et {negative} négatifs \n")
     
