@@ -157,6 +157,8 @@ def erosion(img, eroder_size=3):
 def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
     positive = 0
     negative = 0
+    matrice_confusion_pos = {}
+    matrice_confusion_neg = {}
     for idx, sample in enumerate(testing_set):
         distances = [distanceEuclidienne(sample[1], train_sample[1]) for train_sample in training_set]
 
@@ -172,12 +174,35 @@ def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
         print(f"Le candidat {idx} était un {testing_labels[idx]} et on a trouvé {result_stats}")
         if testing_labels[idx] == result_stats[0][0]:
             positive += 1
+            try:
+                matrice_confusion_pos[str(testing_labels[idx])] = int(matrice_confusion_pos[str(testing_labels[idx])]) + 1
+            except :
+                matrice_confusion_pos[str(testing_labels[idx])] = 1
         else:
             negative += 1
+            try:
+                matrice_confusion_neg[str(testing_labels[idx])] = int(matrice_confusion_neg[str(testing_labels[idx])]) + 1
+            except :
+                matrice_confusion_neg[str(testing_labels[idx])] = 1
 
+    print(matrice_confusion_pos, matrice_confusion_neg)
     reussite = round((positive / (negative + positive)) * 100, 2)
     print(f"Taux de réussite : {reussite}% avec {positive} positifs et {negative} négatifs")
-            
+    
+    print('         +       -       0       1       2       3       4       5       6       7       8       9       ')
+    print('---------------------------------------------------------------------------------------------------------')
+    print('+|       {}      {}      {}      {}      {}      {}      {}      {}      {}      {}      {}      {}      ')
+    print('-|')
+    print('0|')
+    print('1|')
+    print('2|')
+    print('3|')
+    print('4|')
+    print('5|')
+    print('6|')
+    print('7|')
+    print('8|')
+    print('9|')
 
 def getStatsOfImage(img):
     """Récupère les informations (zoning, profils horizontal et vertical) d'une image qu'on utilisera pour la catégoriser
@@ -248,9 +273,6 @@ def zoning(ukwImg, grid_size = 4):
 
             if stopX > IMG_WIDTH : stopX = IMG_WIDTH
             if stopY > IMG_HEIGHT : stopY = IMG_HEIGHT
-
-            width = stopX-startX
-            height = stopY-startY
 
             newZone = [binImg[X][Y] for X in range(startX, stopX) for Y in range(startY, stopY)]
 
