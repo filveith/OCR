@@ -1,37 +1,9 @@
 from PIL import Image, ImageOps
 from os import walk
-from RFManipulation import standardize
+from RFManipulation import *
 from RFExtraction import *
 
 IMG_WIDTH = IMG_HEIGHT = 50
-
-def getBinaryImg(img):
-    """Return the binary version of an image (Only black and white pixels)
-
-    Args:
-        img (Image)
-
-    Returns:
-        array: The binary image as a nested array [[0,1,1,...][1,1,1,...]] 
-    """
-    imagePixels = list(img.getdata())
-    binaryImage = []
-    width = img.size[0]
-    nb = 0
-    row = []
-    for p in imagePixels:
-        nb += 1
-        if p == 255 or p == 1:
-            row.append(1)
-        else:
-            row.append(0)   
-
-        if width == nb:
-            binaryImage.append(row)
-            nb = 0
-            row = []
-
-    return binaryImage
 
 def getImages(set):
     imagesNames = next(walk(set), (None, None, []))[2]
@@ -96,3 +68,37 @@ def distanceEuclidienne(vecteur1, vecteur2):
             dist += (vecteur2[k] - vecteur1[k])**2
         
     return dist
+
+def showMatrix(results, search):
+    positive = 0
+    negative = 0
+    matrice_confusion = {}
+    if search == results:
+        positive += 1
+
+        try:
+            (matrice_confusion[search])[results] = (matrice_confusion[search])[results] + 1
+        except :
+            try:
+                matrice_confusion[str(search)][results] = 1
+            except:
+                matrice_confusion[str(search)] = {results:1}
+            
+    else:
+        negative += 1
+        try:
+            (matrice_confusion[search])[results] = (matrice_confusion[search])[results]+1
+        except :
+            try:
+                matrice_confusion[str(search)][results] = 1
+            except:
+                matrice_confusion[str(search)] = {results:1}
+                
+    reussite = round((positive / (negative + positive)) * 100, 2)
+    print(f"\nTaux de réussite : {reussite}% avec {positive} positifs et {negative} négatifs \n")
+    
+    print('         +       -       0       1       2       3       4       5       6       7       8       9       ')
+    print('---------------------------------------------------------------------------------------------------------')
+
+    for item in matrice_confusion:     
+        print(f'{item}|       {matrice_confusion[item]["+"] if "+" in matrice_confusion[item] else 0}       {matrice_confusion[item]["-"] if "-" in matrice_confusion[item] else 0}       {matrice_confusion[item]["0"] if "0" in matrice_confusion[item] else 0}       {matrice_confusion[item]["1"] if "1" in matrice_confusion[item] else 0}       {matrice_confusion[item]["2"] if "2" in matrice_confusion[item] else 0}       {matrice_confusion[item]["3"] if "3" in matrice_confusion[item] else 0}       {matrice_confusion[item]["4"] if "4" in matrice_confusion[item] else 0}       {matrice_confusion[item]["5"] if "5" in matrice_confusion[item] else 0}       {matrice_confusion[item]["6"] if "6" in matrice_confusion[item] else 0}       {matrice_confusion[item]["7"] if "7" in matrice_confusion[item] else 0}       {matrice_confusion[item]["8"] if "8" in matrice_confusion[item] else 0}       {matrice_confusion[item]["9"] if "9" in matrice_confusion[item] else 0}       ')

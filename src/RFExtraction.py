@@ -1,6 +1,6 @@
 import numpy as np
 from math import ceil
-from RFUtils import getBinaryImg
+from RFManipulation import getBinaryImg
 
 IMG_WIDTH = IMG_HEIGHT = 50
 ZONING_GRID = 5

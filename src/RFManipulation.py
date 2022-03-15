@@ -1,8 +1,35 @@
 import copy
 from PIL import Image
-from RFUtils import getBinaryImg
 
 IMG_WIDTH = IMG_HEIGHT = 50
+
+def getBinaryImg(img):
+    """Return the binary version of an image (Only black and white pixels)
+
+    Args:
+        img (Image)
+
+    Returns:
+        array: The binary image as a nested array [[0,1,1,...][1,1,1,...]] 
+    """
+    imagePixels = list(img.getdata())
+    binaryImage = []
+    width = img.size[0]
+    nb = 0
+    row = []
+    for p in imagePixels:
+        nb += 1
+        if p == 255 or p == 1:
+            row.append(1)
+        else:
+            row.append(0)   
+
+        if width == nb:
+            binaryImage.append(row)
+            nb = 0
+            row = []
+
+    return binaryImage
 
 def standardize(image):
     image = image.resize((IMG_WIDTH, IMG_HEIGHT))
