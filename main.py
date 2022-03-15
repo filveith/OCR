@@ -14,6 +14,7 @@ ALL_CHIFFRES = "projetOCR/chiffres/"
 TRAIN = "train/"
 TEST = "test/"
 IMG_WIDTH = IMG_HEIGHT = 50
+ZONING_GRID = 5
 
 def standardize(image, name):
     path = './clean/'+name+''
@@ -157,8 +158,7 @@ def erosion(img, eroder_size=3):
 def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
     positive = 0
     negative = 0
-    matrice_confusion_pos = {}
-    matrice_confusion_neg = {}
+    matrice_confusion = {}
     for idx, sample in enumerate(testing_set):
         distances = [distanceEuclidienne(sample[1], train_sample[1]) for train_sample in training_set]
 
@@ -172,37 +172,39 @@ def knn(training_set, training_labels, testing_set, testing_labels, k = 7):
 
         result_stats = sorted(result_stats, key=lambda x:x[1], reverse=True)
         print(f"Le candidat {idx} était un {testing_labels[idx]} et on a trouvé {result_stats}")
-        if testing_labels[idx] == result_stats[0][0]:
+        result = result_stats[0][0]
+        search = testing_labels[idx]
+        if search == result:
             positive += 1
+
             try:
-                matrice_confusion_pos[str(testing_labels[idx])] = int(matrice_confusion_pos[str(testing_labels[idx])]) + 1
+                (matrice_confusion[search])[result] = (matrice_confusion[search])[result] + 1
             except :
-                matrice_confusion_pos[str(testing_labels[idx])] = 1
+                try:
+                    matrice_confusion[str(search)][result] = 1
+                except:
+                    matrice_confusion[str(search)] = {result:1}
+                
         else:
             negative += 1
             try:
-                matrice_confusion_neg[str(testing_labels[idx])] = int(matrice_confusion_neg[str(testing_labels[idx])]) + 1
+                (matrice_confusion[search])[result] = (matrice_confusion[search])[result]+1
             except :
-                matrice_confusion_neg[str(testing_labels[idx])] = 1
-
-    print(matrice_confusion_pos, matrice_confusion_neg)
+                try:
+                    matrice_confusion[str(search)][result] = 1
+                except:
+                    matrice_confusion[str(search)] = {result:1}
+                
     reussite = round((positive / (negative + positive)) * 100, 2)
-    print(f"Taux de réussite : {reussite}% avec {positive} positifs et {negative} négatifs")
+    print(f"\nTaux de réussite : {reussite}% avec {positive} positifs et {negative} négatifs \n")
     
     print('         +       -       0       1       2       3       4       5       6       7       8       9       ')
     print('---------------------------------------------------------------------------------------------------------')
-    print('+|       {}      {}      {}      {}      {}      {}      {}      {}      {}      {}      {}      {}      ')
-    print('-|')
-    print('0|')
-    print('1|')
-    print('2|')
-    print('3|')
-    print('4|')
-    print('5|')
-    print('6|')
-    print('7|')
-    print('8|')
-    print('9|')
+
+#matrice_confusion.keys()
+
+    for item in matrice_confusion:     
+        print(f'{item}|       {matrice_confusion[item]["+"] if "+" in matrice_confusion[item] else 0}       {matrice_confusion[item]["-"] if "-" in matrice_confusion[item] else 0}       {matrice_confusion[item]["0"] if "0" in matrice_confusion[item] else 0}       {matrice_confusion[item]["1"] if "1" in matrice_confusion[item] else 0}       {matrice_confusion[item]["2"] if "2" in matrice_confusion[item] else 0}       {matrice_confusion[item]["3"] if "3" in matrice_confusion[item] else 0}       {matrice_confusion[item]["4"] if "4" in matrice_confusion[item] else 0}       {matrice_confusion[item]["5"] if "5" in matrice_confusion[item] else 0}       {matrice_confusion[item]["6"] if "6" in matrice_confusion[item] else 0}       {matrice_confusion[item]["7"] if "7" in matrice_confusion[item] else 0}       {matrice_confusion[item]["8"] if "8" in matrice_confusion[item] else 0}       {matrice_confusion[item]["9"] if "9" in matrice_confusion[item] else 0}       ')
 
 def getStatsOfImage(img):
     """Récupère les informations (zoning, profils horizontal et vertical) d'une image qu'on utilisera pour la catégoriser
@@ -323,7 +325,7 @@ def distanceEuclidienne(vecteur1, vecteur2):
 trainImages = getImages(TRAIN)
 trainLabels = getLabels(TRAIN)
 
-testImages = getImages(TRAIN)
-testLabels = getLabels(TRAIN)
+testImages = getImages(TEST)
+testLabels = getLabels(TEST)
 
 knn(trainImages, trainLabels, testImages, testLabels)
